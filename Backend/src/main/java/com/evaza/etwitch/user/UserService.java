@@ -1,0 +1,49 @@
+package com.evaza.etwitch.user;
+
+import com.evaza.etwitch.db.UserRepository;
+import com.evaza.etwitch.db.entity.UserEntity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+// Business logic: UserService
+@Service
+public class UserService {
+    private final UserDetailsManager userDetailsManager;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+
+
+    public UserService(UserDetailsManager userDetailsManager, PasswordEncoder passwordEncoder, UserRepository userRepository) {
+        this.userDetailsManager = userDetailsManager;
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+    }
+
+    // “@Transactional” 也是用 AOP(aspect oriented programming) 实现的
+    // 一般比较复杂的，有写操作，都要加 @Transaction
+    @Transactional
+    public void register(String username, String password, String firstName, String lastName) throws UserAlreadyExistException {
+        UserEntity existingUser = userRepository.findByUsername(username);
+        if (existingUser != null) {
+            throw new UserAlreadyExistException("User " + username + " already exists");
+        }
+
+        // builder() 可以让你快速optional的填想要填的user信息，而用consturctor要更麻烦一些
+        UserDetails user = User.builder()
+                .username(username)
+                .password(passwordEncoder.encode(password))
+                .roles("USER")
+                .build();
+        userDetailsManager.createUser(user);
+        userRepository.updateNameByUsername(username, firstName, lastName);
+    }
+
+    public UserEntity findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+}

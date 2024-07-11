@@ -1,0 +1,53 @@
+spring:
+  jackson:
+    # sanitize: result returned not including null (to save space)
+    default-property-inclusion: non_null
+    # CamelCase - Java; python - snake_case
+    property-naming-strategy: SNAKE_CASE
+  cloud:
+    openfeign:
+      oauth2:
+        enabled: true
+        clientRegistrationId: etwitch
+      client:
+        config:
+          twitch-api:               # annotated by @FeignClient(name = "twitch-api") in interface ETwitchApiClient
+            url: https://api.twitch.tv/helix
+            loggerLevel: basic       # clickIn - choices are FULL, HEADER, BASIC, NONE
+            default-request-headers:
+              Client-Id: "l7uj3szswetcgyiir73r08qzmkazsu"     # your twitch client id
+  security:
+    oauth2:         # send oauth2 standard
+      client:
+        registration:
+          etwitch:        # which name???
+            # first line: twitch officially meant should use this kind of authorization-grant-type: client_credentials
+            # one of oauth2 supportable type
+            authorization-grant-type: client_credentials
+            client-authentication-method: client_secret_post
+            client-id: "l7uj3szswetcgyiir73r08qzmkazsu"       # your twitch client id
+            client-secret: "8txceqeelt7f3nguqvfxx4z4epfz57"   # your twitch client secret
+        provider:
+          etwitch:
+            token-uri: https://id.twitch.tv/oauth2/token      # The URL to request for token
+  datasource:
+    url: jdbc:mysql://${DATABASE_URL:localhost}:3306/etwitch?createDatabaseIfNotExist=true
+    username: ${DATABASE_USERNAME:root}
+    password: ${DATABASE_PASSWORD:secret}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: "classpath:database-init.sql"
+  cache:
+    caffeine:
+      spec: expireAfterWrite=5s
+
+logging:
+  level:
+    # Incoming HTTP requests
+    org.apache.coyote.http11.Http11InputBuffer: DEBUG
+    # when etwitch client send HTTP requests outside，we want to know what it looks
+    com.evaza.etwitch.external.ETwitchApiClient: DEBUG
+    # database
+    org.springframework.jdbc.core: DEBUG # SQL

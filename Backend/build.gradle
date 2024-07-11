@@ -1,0 +1,44 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.0.12'
+	id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.evaza'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencyManagement {
+	imports {
+		// class 15 declarative http, real openfein source
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:2022.0.1"
+	}
+}
+
+dependencies {
+	implementation 'com.github.ben-manes.caffeine:caffeine:3.+'					// class 21-22 cache
+	implementation 'com.github.javafaker:javafaker:1.0.2'		// class7
+	implementation 'org.springframework.boot:spring-boot-starter-cache'			// class 21-22 cache
+	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'		// class 17 SQL connection
+	implementation 'org.springframework.boot:spring-boot-starter-security'		// class 15 declarative http
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'  	// class 15 declarative http, import from above
+	implementation 'org.springframework.security:spring-security-oauth2-client'	// class 15 declarative http
+	runtimeOnly 'com.mysql:mysql-connector-j'									// class 17 SQL connection driver
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('bootBuildImage') {
+	builder = 'paketobuildpacks/builder-jammy-base:latest'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
